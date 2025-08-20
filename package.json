@@ -41,6 +41,11 @@
         "label": "YouTube Studio Light",
         "uiTheme": "vs",
         "path": "./themes/youtube-studio-light.json"
+      },
+      {
+        "label": "YouTube Studio Dark",
+        "uiTheme": "vs-dark",
+        "path": "./themes/youtube-studio-dark.json"
       }
     ]
   },
