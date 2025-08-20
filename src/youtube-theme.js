@@ -1,53 +1,95 @@
 const chroma = require("chroma-js");
 const { getColors } = require("./colors");
 
-// Choosing colors from primer/primitives
-// There are multiple ways to define what color is used:
+// YouTube Creator Theme
+// 基于GitHub主题，融入YouTube红色元素，专为内容创作者设计
 
-// 1. Global variable
-//    e.g. "textLink.foreground": color.fg.default,
-// 2. Color scale
-//    e.g. "textLink.foreground": scale.blue[5],
-// 3. Per theme. Useful when a certain theme needs an exception
-//    e.g. "textLink.foreground": themes({ light: scale.blue[5], light_high_contrast: scale.blue[5], light_colorblind: scale.blue[5], dark: scale.blue[2], dark_high_contrast: scale.blue[3], dark_colorblind: scale.blue[2], dark_dimmed: scale.blue[3] }),
+function getYouTubeStudioTheme({ theme, name }) {
+  // YouTube Studio品牌颜色系统 - 根据PRD精确定义
+  const youtubeRed = "#FF0000";
+  const youtubeRedDark = "#CC0000";
+  const youtubeRedSubtle = theme === "youtube_studio_light" ? "#FF000015" : "#FF000020"; // 根据主题调整透明度
+  const youtubeRedSelection = theme === "youtube_studio_light" ? "#FF000015" : "#FF00001A";
 
-function getTheme({ theme, name }) {
+  const themes = (options) => options[theme];
+  const rawColors = getColors(theme === "youtube_studio_light" ? "light" : "dark");
+  const color = changeColorToHexAlphas(rawColors);
+  const scale = color.scale;
 
-  const themes = (options) => options[theme]; // Usage: themes({ light: "lightblue", light_high_contrast: "lightblue", light_colorblind: "lightblue", dark: "darkblue", dark_high_contrast: "darkblue", dark_colorblind: "darkblue", dark_dimmed: "royalblue" })
-  const rawColors = getColors(theme)
-  const color = changeColorToHexAlphas(rawColors)
-  const scale = color.scale; // Usage: scale.blue[6]
+  // YouTube Studio 专属背景颜色 - 按照PRD规范
+  const youtubeStudioBackgrounds = {
+    youtube_studio_dark: {
+      editor: "#0F0F0F",      // YouTube 深色背景
+      sideBar: "#181818",     // 稍亮的侧边栏
+      activityBar: "#212121", // 活动栏背景
+    },
+    youtube_studio_light: {
+      editor: "#FFFFFF",      // 明亮背景
+      sideBar: "#F9F9F9",     // 浅灰侧边栏
+      activityBar: "#FAFAFA", // 活动栏背景
+    }
+  };
+
+  const studioBg = youtubeStudioBackgrounds[theme];
 
   const onlyDark = (color) => {
-    return themes({ dark: color, dark_high_contrast: color, dark_colorblind: color, dark_dimmed: color })
+    return themes({ youtube_studio_dark: color })
   }
 
-  const onlyHighContrast = (color) => {
-    return themes({ light_high_contrast: color, dark_high_contrast: color })
-  }
-
-  const onlyDarkHighContrast = (color) => {
-    return themes({ dark_high_contrast: color })
+  const onlyLight = (color) => {
+    return themes({ youtube_studio_light: color })
   }
 
   const lightDark = (light, dark) => {
-    return themes({ light: light, light_high_contrast: light, light_colorblind: light, dark: dark, dark_high_contrast: dark, dark_colorblind: dark, dark_dimmed: dark })
+    return themes({ youtube_studio_light: light, youtube_studio_dark: dark })
   }
 
   const alpha = (color, alpha) => {
     return chroma(color).alpha(alpha).hex()
   }
 
+  // 为YouTube创作者优化的颜色覆盖
+  const youtubeColorOverrides = {
+    // 使用YouTube红色作为强调色
+    "activityBar.activeBorder": youtubeRed,
+    "activityBarBadge.background": youtubeRed,
+    "badge.background": youtubeRed,
+    "button.background": youtubeRedDark,
+    "button.hoverBackground": youtubeRed,
+    "focusBorder": youtubeRed,
+    "progressBar.background": youtubeRed,
+    "statusBar.focusBorder": alpha(youtubeRed, 0.5),
+    "statusBarItem.focusBorder": youtubeRed,
+    "tab.activeBorderTop": youtubeRed,
+    "panelTitle.activeBorder": youtubeRed,
+    
+    // 选择和高亮使用PRD指定的红色
+    "editor.selectionBackground": youtubeRedSelection, // 按PRD规范
+    "editor.inactiveSelectionBackground": youtubeRedSubtle,
+    "editor.lineHighlightBorder": lightDark(alpha(youtubeRed, 0.3), alpha(youtubeRed, 0.2)),
+    "list.focusBackground": youtubeRedSubtle,
+    "list.inactiveFocusBackground": youtubeRedSubtle,
+    "list.activeSelectionBackground": youtubeRedSelection, // PRD指定的激活选择背景
+    "list.hoverBackground": lightDark("#FFFFFF0A", "#FFFFFF0A"), // PRD指定的悬停背景
+    
+    // 保持原有的可读性，只在特定位置使用红色
+    "textLink.foreground": lightDark(youtubeRedDark, youtubeRed),
+    "textLink.activeForeground": lightDark(youtubeRedDark, youtubeRed),
+    
+    // Git装饰保持原有颜色，不使用红色避免与错误状态混淆
+    "gitDecoration.addedResourceForeground": color.success.fg,
+    "gitDecoration.modifiedResourceForeground": color.attention.fg,
+    "gitDecoration.deletedResourceForeground": color.danger.fg,
+  };
+
   return {
     name: name,
     colors: {
-      focusBorder          : color.accent.emphasis,
+      // 基础GitHub主题颜色
       foreground           : color.fg.default,
       descriptionForeground: color.fg.muted,
       errorForeground      : color.danger.fg,
 
-      "textLink.foreground"      : color.accent.fg,
-      "textLink.activeForeground": color.accent.fg,
       "textBlockQuote.background": color.canvas.inset,
       "textBlockQuote.border"    : color.border.default,
       "textCodeBlock.background" : color.neutral.muted,
@@ -57,10 +99,6 @@ function getTheme({ theme, name }) {
 
       "icon.foreground"           : color.fg.muted,
       "keybindingLabel.foreground": color.fg.default,
-
-      "button.background"     : color.btn.primary.bg,
-      "button.foreground"     : color.btn.primary.text,
-      "button.hoverBackground": color.btn.primary.hoverBg,
 
       "button.secondaryBackground"     : color.btn.activeBg,
       "button.secondaryForeground"     : color.btn.text,
@@ -80,9 +118,6 @@ function getTheme({ theme, name }) {
       "input.placeholderForeground": color.fg.subtle,
 
       "badge.foreground": color.fg.onEmphasis,
-      "badge.background": color.accent.emphasis,
-
-      "progressBar.background": color.accent.emphasis,
 
       "titleBar.activeForeground"  : color.fg.muted,
       "titleBar.activeBackground"  : color.canvas.default,
@@ -90,16 +125,14 @@ function getTheme({ theme, name }) {
       "titleBar.inactiveBackground": color.canvas.inset,
       "titleBar.border"            : color.border.default,
 
-      "activityBar.foreground"        : color.fg.default,
-      "activityBar.inactiveForeground": color.fg.muted,
-      "activityBar.background"        : color.canvas.default,
+      "activityBar.foreground"        : lightDark("#030303", "#FFFFFF"),
+      "activityBar.inactiveForeground": lightDark("#606060", "#AAAAAA"), // PRD指定的描述文本颜色
+      "activityBar.background"        : studioBg.activityBar, // YouTube Studio 活动栏
       "activityBarBadge.foreground"   : color.fg.onEmphasis,
-      "activityBarBadge.background"   : color.accent.emphasis,
-      "activityBar.activeBorder"      : color.primer.border.active,
       "activityBar.border"            : color.border.default,
 
-      "sideBar.foreground"             : color.fg.default,
-      "sideBar.background"             : color.canvas.inset,
+      "sideBar.foreground"             : lightDark("#030303", "#FFFFFF"),
+      "sideBar.background"             : studioBg.sideBar, // YouTube Studio 侧边栏
       "sideBar.border"                 : color.border.default,
       "sideBarTitle.foreground"        : color.fg.default,
       "sideBarSectionHeader.foreground": color.fg.default,
@@ -113,9 +146,7 @@ function getTheme({ theme, name }) {
       "list.inactiveSelectionBackground": color.neutral.muted,
       "list.activeSelectionBackground"  : color.neutral.muted,
       "list.focusForeground"            : color.fg.default,
-      "list.focusBackground"            : color.accent.subtle,
-      "list.inactiveFocusBackground"    : color.accent.subtle,
-      "list.highlightForeground"        : color.accent.fg,
+      "list.highlightForeground"        : youtubeRed, // 使用YouTube红色突出显示
 
       "tree.indentGuidesStroke": color.border.muted,
 
@@ -126,7 +157,7 @@ function getTheme({ theme, name }) {
       "notifications.border"               : color.border.default,
       "notificationsErrorIcon.foreground"  : color.danger.fg,
       "notificationsWarningIcon.foreground": color.attention.fg,
-      "notificationsInfoIcon.foreground"   : color.accent.fg,
+      "notificationsInfoIcon.foreground"   : youtubeRed, // 信息图标使用YouTube红色
 
       "pickerGroup.border"    : color.border.default,
       "pickerGroup.foreground": color.fg.muted,
@@ -136,7 +167,6 @@ function getTheme({ theme, name }) {
       "statusBar.foreground"             : color.fg.muted,
       "statusBar.background"             : color.canvas.default,
       "statusBar.border"                 : color.border.default,
-      "statusBar.focusBorder"            : alpha(color.accent.emphasis, 0.5),
       "statusBar.noFolderBackground"     : color.canvas.default,
       "statusBar.debuggingForeground"    : color.fg.onEmphasis,
       "statusBar.debuggingBackground"    : color.danger.emphasis,
@@ -145,7 +175,6 @@ function getTheme({ theme, name }) {
       "statusBarItem.remoteBackground"   : lightDark(color.scale.gray[1], color.scale.gray[6]),
       "statusBarItem.hoverBackground"    : alpha(color.fg.default, 0.08),
       "statusBarItem.activeBackground"   : alpha(color.fg.default, 0.12),
-      "statusBarItem.focusBorder"        : color.accent.emphasis,
 
       "editorGroupHeader.tabsBackground": color.canvas.inset,
       "editorGroupHeader.tabsBorder"    : color.border.default,
@@ -161,31 +190,27 @@ function getTheme({ theme, name }) {
       "tab.unfocusedActiveBorderTop": color.border.default,
       "tab.activeBorder"            : color.canvas.default,
       "tab.unfocusedActiveBorder"   : color.canvas.default,
-      "tab.activeBorderTop"         : color.primer.border.active,
 
       "breadcrumb.foreground"               : color.fg.muted,
       "breadcrumb.focusForeground"          : color.fg.default,
       "breadcrumb.activeSelectionForeground": color.fg.muted,
       "breadcrumbPicker.background"         : color.canvas.overlay,
 
-      "editor.foreground"                 : color.fg.default,
-      "editor.background"                 : color.canvas.default,
+      "editor.foreground"                 : lightDark("#030303", "#FFFFFF"), // PRD指定的文本颜色
+      "editor.background"                 : studioBg.editor, // YouTube Studio 专属背景
       "editorWidget.background"           : color.canvas.overlay,
       "editor.foldBackground"             : alpha(color.neutral.emphasis, 0.1),
       "editor.lineHighlightBackground"    : color.codemirror.activelineBg,
-      "editor.lineHighlightBorder"        : onlyDarkHighContrast(color.accent.fg),
       "editorLineNumber.foreground"       : lightDark(scale.gray[4], scale.gray[4]),
       "editorLineNumber.activeForeground" : color.fg.default,
       "editorIndentGuide.background"      : alpha(color.fg.default, 0.12),
       "editorIndentGuide.activeBackground": alpha(color.fg.default, 0.24),
-      "editorWhitespace.foreground"       : lightDark( scale.gray[3], scale.gray[5]),
-      "editorCursor.foreground"           : color.accent.fg,
+      "editorWhitespace.foreground"       : lightDark(scale.gray[3], scale.gray[5]),
+      "editorCursor.foreground"           : youtubeRed, // 光标使用YouTube红色
 
       "editor.findMatchBackground"            : color.attention.emphasis,
       "editor.findMatchHighlightBackground"   : alpha(scale.yellow[1], 0.5),
-      "editor.linkedEditingBackground"        : alpha(color.accent.fg, 0.07),
-      "editor.inactiveSelectionBackground"    : alpha(color.accent.fg, 0.07),
-      "editor.selectionBackground"            : alpha(color.accent.fg, 0.2),
+      "editor.linkedEditingBackground"        : alpha(youtubeRed, 0.07), // 链接编辑使用红色
       "editor.selectionHighlightBackground"   : alpha(scale.green[3], 0.25),
       "editor.wordHighlightBackground"        : alpha(color.neutral.subtle, 0.5),
       "editor.wordHighlightBorder"            : alpha(color.neutral.muted, 0.6),
@@ -193,10 +218,6 @@ function getTheme({ theme, name }) {
       "editor.wordHighlightStrongBorder"      : alpha(color.neutral.muted, 0.6),
       "editorBracketMatch.background"         : alpha(scale.green[3], 0.25),
       "editorBracketMatch.border"             : alpha(scale.green[3], 0.6),
-      // text selection for High Contrast themes
-      "editor.selectionForeground"            : onlyHighContrast(color.fg.onEmphasis),
-      "editor.selectionBackground"            : onlyHighContrast(color.neutral.emphasisPlus),
-      "editor.inactiveSelectionBackground"    : onlyHighContrast(color.neutral.emphasis),
 
       "editorInlayHint.background": alpha(scale.gray[3], 0.2),
       "editorInlayHint.foreground": color.fg.muted,
@@ -226,59 +247,58 @@ function getTheme({ theme, name }) {
 
       "panel.background"               : color.canvas.inset,
       "panel.border"                   : color.border.default,
-      "panelTitle.activeBorder"        : color.primer.border.active,
       "panelTitle.activeForeground"    : color.fg.default,
       "panelTitle.inactiveForeground"  : color.fg.muted,
       "panelInput.border"              : color.border.default,
 
       "debugIcon.breakpointForeground": color.danger.fg,
 
-      "debugConsole.infoForeground": lightDark( scale.gray[6], scale.gray[3]),
-      "debugConsole.warningForeground": lightDark( scale.yellow[6], scale.yellow[3]),
-      "debugConsole.errorForeground": lightDark( scale.red[5], scale.red[2]),
-      "debugConsole.sourceForeground": lightDark( scale.yellow[5], scale.yellow[2]),
-      "debugConsoleInputIcon.foreground": lightDark( scale.purple[6], scale.purple[3]),
+      "debugConsole.infoForeground": lightDark(scale.gray[6], scale.gray[3]),
+      "debugConsole.warningForeground": lightDark(scale.yellow[6], scale.yellow[3]),
+      "debugConsole.errorForeground": lightDark(scale.red[5], scale.red[2]),
+      "debugConsole.sourceForeground": lightDark(scale.yellow[5], scale.yellow[2]),
+      "debugConsoleInputIcon.foreground": lightDark(scale.purple[6], scale.purple[3]),
 
       "debugTokenExpression.name": lightDark(scale.blue[6], scale.blue[2]),
       "debugTokenExpression.value": lightDark(scale.blue[8], scale.blue[1]),
       "debugTokenExpression.string": lightDark(scale.blue[8], scale.blue[1]),
-      "debugTokenExpression.boolean": lightDark( scale.green[6], scale.green[2]),
-      "debugTokenExpression.number": lightDark( scale.green[6], scale.green[2]),
-      "debugTokenExpression.error": lightDark( scale.red[6], scale.red[2]),
+      "debugTokenExpression.boolean": lightDark(scale.green[6], scale.green[2]),
+      "debugTokenExpression.number": lightDark(scale.green[6], scale.green[2]),
+      "debugTokenExpression.error": lightDark(scale.red[6], scale.red[2]),
 
-      "symbolIcon.arrayForeground": lightDark( scale.orange[6], scale.orange[3]),
-      "symbolIcon.booleanForeground": lightDark( scale.blue[6], scale.blue[3]),
-      "symbolIcon.classForeground": lightDark( scale.orange[6], scale.orange[3]),
-      "symbolIcon.colorForeground": lightDark( scale.blue[8], scale.blue[2]),
-      "symbolIcon.constructorForeground": lightDark( scale.purple[8], scale.purple[2]),
-      "symbolIcon.enumeratorForeground": lightDark( scale.orange[6], scale.orange[3]),
-      "symbolIcon.enumeratorMemberForeground": lightDark( scale.blue[6], scale.blue[3]),
-      "symbolIcon.eventForeground": lightDark( scale.gray[6], scale.gray[4]),
-      "symbolIcon.fieldForeground": lightDark( scale.orange[6], scale.orange[3]),
-      "symbolIcon.fileForeground": lightDark( scale.yellow[6], scale.yellow[3]),
-      "symbolIcon.folderForeground": lightDark( scale.yellow[6], scale.yellow[3]),
-      "symbolIcon.functionForeground": lightDark( scale.purple[6], scale.purple[3]),
-      "symbolIcon.interfaceForeground": lightDark( scale.orange[6], scale.orange[3]),
-      "symbolIcon.keyForeground": lightDark( scale.blue[6], scale.blue[3]),
-      "symbolIcon.keywordForeground": lightDark( scale.red[6], scale.red[3]),
-      "symbolIcon.methodForeground": lightDark( scale.purple[6], scale.purple[3]),
-      "symbolIcon.moduleForeground": lightDark( scale.red[6], scale.red[3]),
-      "symbolIcon.namespaceForeground": lightDark( scale.red[6], scale.red[3]),
-      "symbolIcon.nullForeground": lightDark( scale.blue[6], scale.blue[3]),
-      "symbolIcon.numberForeground": lightDark( scale.green[6], scale.green[3]),
-      "symbolIcon.objectForeground": lightDark( scale.orange[6], scale.orange[3]),
-      "symbolIcon.operatorForeground": lightDark( scale.blue[8], scale.blue[2]),
-      "symbolIcon.packageForeground": lightDark( scale.orange[6], scale.orange[3]),
-      "symbolIcon.propertyForeground": lightDark( scale.orange[6], scale.orange[3]),
-      "symbolIcon.referenceForeground": lightDark( scale.blue[6], scale.blue[3]),
-      "symbolIcon.snippetForeground": lightDark( scale.blue[6], scale.blue[3]),
-      "symbolIcon.stringForeground": lightDark( scale.blue[8], scale.blue[2]),
-      "symbolIcon.structForeground": lightDark( scale.orange[6], scale.orange[3]),
-      "symbolIcon.textForeground": lightDark( scale.blue[8], scale.blue[2]),
-      "symbolIcon.typeParameterForeground": lightDark( scale.blue[8], scale.blue[2]),
-      "symbolIcon.unitForeground": lightDark( scale.blue[6], scale.blue[3]),
-      "symbolIcon.variableForeground": lightDark( scale.orange[6], scale.orange[3]),
-      "symbolIcon.constantForeground": lightDark( scale.green[6], scale.green),
+      "symbolIcon.arrayForeground": lightDark(scale.orange[6], scale.orange[3]),
+      "symbolIcon.booleanForeground": lightDark(scale.blue[6], scale.blue[3]),
+      "symbolIcon.classForeground": lightDark(scale.orange[6], scale.orange[3]),
+      "symbolIcon.colorForeground": lightDark(scale.blue[8], scale.blue[2]),
+      "symbolIcon.constructorForeground": lightDark(scale.purple[8], scale.purple[2]),
+      "symbolIcon.enumeratorForeground": lightDark(scale.orange[6], scale.orange[3]),
+      "symbolIcon.enumeratorMemberForeground": lightDark(scale.blue[6], scale.blue[3]),
+      "symbolIcon.eventForeground": lightDark(scale.gray[6], scale.gray[4]),
+      "symbolIcon.fieldForeground": lightDark(scale.orange[6], scale.orange[3]),
+      "symbolIcon.fileForeground": lightDark(scale.yellow[6], scale.yellow[3]),
+      "symbolIcon.folderForeground": lightDark(scale.yellow[6], scale.yellow[3]),
+      "symbolIcon.functionForeground": lightDark(scale.purple[6], scale.purple[3]),
+      "symbolIcon.interfaceForeground": lightDark(scale.orange[6], scale.orange[3]),
+      "symbolIcon.keyForeground": lightDark(scale.blue[6], scale.blue[3]),
+      "symbolIcon.keywordForeground": lightDark(scale.red[6], scale.red[3]),
+      "symbolIcon.methodForeground": lightDark(scale.purple[6], scale.purple[3]),
+      "symbolIcon.moduleForeground": lightDark(scale.red[6], scale.red[3]),
+      "symbolIcon.namespaceForeground": lightDark(scale.red[6], scale.red[3]),
+      "symbolIcon.nullForeground": lightDark(scale.blue[6], scale.blue[3]),
+      "symbolIcon.numberForeground": lightDark(scale.green[6], scale.green[3]),
+      "symbolIcon.objectForeground": lightDark(scale.orange[6], scale.orange[3]),
+      "symbolIcon.operatorForeground": lightDark(scale.blue[8], scale.blue[2]),
+      "symbolIcon.packageForeground": lightDark(scale.orange[6], scale.orange[3]),
+      "symbolIcon.propertyForeground": lightDark(scale.orange[6], scale.orange[3]),
+      "symbolIcon.referenceForeground": lightDark(scale.blue[6], scale.blue[3]),
+      "symbolIcon.snippetForeground": lightDark(scale.blue[6], scale.blue[3]),
+      "symbolIcon.stringForeground": lightDark(scale.blue[8], scale.blue[2]),
+      "symbolIcon.structForeground": lightDark(scale.orange[6], scale.orange[3]),
+      "symbolIcon.textForeground": lightDark(scale.blue[8], scale.blue[2]),
+      "symbolIcon.typeParameterForeground": lightDark(scale.blue[8], scale.blue[2]),
+      "symbolIcon.unitForeground": lightDark(scale.blue[6], scale.blue[3]),
+      "symbolIcon.variableForeground": lightDark(scale.orange[6], scale.orange[3]),
+      "symbolIcon.constantForeground": lightDark(scale.green[6], scale.green),
 
       "terminal.foreground": color.fg.default,
       'terminal.ansiBlack': color.ansi.black,
@@ -304,7 +324,7 @@ function getTheme({ theme, name }) {
       "editorBracketHighlight.foreground4": lightDark(scale.red[5], scale.red[2]),
       "editorBracketHighlight.foreground5": lightDark(scale.pink[5], scale.pink[2]),
       "editorBracketHighlight.foreground6": lightDark(scale.purple[5], scale.purple[2]),
-      "editorBracketHighlight.unexpectedBracket.foreground": color.fg.muted, // gray
+      "editorBracketHighlight.unexpectedBracket.foreground": color.fg.muted,
 
       "gitDecoration.addedResourceForeground"      : color.success.fg,
       "gitDecoration.modifiedResourceForeground"   : color.attention.fg,
@@ -327,9 +347,13 @@ function getTheme({ theme, name }) {
       "settings.modifiedItemIndicator"   : color.attention.muted,
       "welcomePage.buttonBackground"     : color.btn.bg,
       "welcomePage.buttonHoverBackground": color.btn.hoverBg,
+
+      // YouTube特定的颜色覆盖
+      ...youtubeColorOverrides,
     },
     semanticHighlighting: true,
     tokenColors: [
+      // 保持GitHub原有的语法高亮，确保可读性
       {
         scope: ["comment", "punctuation.definition.comment", "string.comment"],
         settings: {
@@ -697,9 +721,7 @@ function getTheme({ theme, name }) {
   };
 }
 
-// Convert to hex
-// VS Code doesn't support other formats like hsl, rgba etc.
-
+// Convert to hex - 复制自theme.js
 function changeColorToHexAlphas(obj) {
   if (typeof obj === 'object') {
     for (var keys in obj) {
@@ -716,5 +738,4 @@ function changeColorToHexAlphas(obj) {
   return obj;
 }
 
-
-module.exports = getTheme;
+module.exports = getYouTubeStudioTheme;

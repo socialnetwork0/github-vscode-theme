@@ -1,9 +1,9 @@
 {
-  "name": "github-vscode-theme",
-  "displayName": "GitHub Theme",
-  "description": "GitHub theme for VS Code",
+  "name": "youtube-creator-github-theme",
+  "displayName": "YouTube Creator GitHub Theme", 
+  "description": "专为YouTube创作者设计的VSCode主题 - 基于GitHub主题，融入YouTube品牌元素",
   "version": "6.3.5",
-  "publisher": "GitHub",
+  "publisher": "SocialNetwork0",
   "license": "MIT",
   "icon": "icon.png",
   "galleryBanner": {
@@ -26,57 +26,21 @@
   "keywords": [
     "theme",
     "github",
+    "youtube",
+    "creator",
     "light",
     "dark",
-    "protanopia",
-    "colorblind"
+    "red",
+    "content-creator",
+    "streaming",
+    "video"
   ],
   "contributes": {
     "themes": [
       {
-        "label": "GitHub Light Default",
+        "label": "YouTube Studio Light",
         "uiTheme": "vs",
-        "path": "./themes/light-default.json"
-      },
-      {
-        "label": "GitHub Light High Contrast",
-        "uiTheme": "hc-light",
-        "path": "./themes/light-high-contrast.json"
-      },
-      {
-        "label": "GitHub Light Colorblind (Beta)",
-        "uiTheme": "vs",
-        "path": "./themes/light-colorblind.json"
-      },
-      {
-        "label": "GitHub Dark Default",
-        "uiTheme": "vs-dark",
-        "path": "./themes/dark-default.json"
-      },
-      {
-        "label": "GitHub Dark High Contrast",
-        "uiTheme": "hc-black",
-        "path": "./themes/dark-high-contrast.json"
-      },
-      {
-        "label": "GitHub Dark Colorblind (Beta)",
-        "uiTheme": "vs-dark",
-        "path": "./themes/dark-colorblind.json"
-      },
-      {
-        "label": "GitHub Dark Dimmed",
-        "uiTheme": "vs-dark",
-        "path": "./themes/dark-dimmed.json"
-      },
-      {
-        "label": "GitHub Light",
-        "uiTheme": "vs",
-        "path": "./themes/light.json"
-      },
-      {
-        "label": "GitHub Dark",
-        "uiTheme": "vs-dark",
-        "path": "./themes/dark.json"
+        "path": "./themes/youtube-studio-light.json"
       }
     ]
   },
